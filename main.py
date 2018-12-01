@@ -1,3 +1,4 @@
+"""Wordpress.org site parsing."""
 import requests
 import csv
 
