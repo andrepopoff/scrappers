@@ -1,6 +1,7 @@
 """Coinmarketcap.com site parsing."""
 import requests
 import csv
+import re
 
 from bs4 import BeautifulSoup
 
@@ -59,8 +60,18 @@ def get_page_data(html, page):
 
 
 def main():
-    url = 'https://coinmarketcap.com/'
-    get_page_data(get_html(url), url)
+    base_url = 'https://coinmarketcap.com/'
+    url = base_url
+
+    while True:
+        get_page_data(get_html(url), url)
+        soup = BeautifulSoup(get_html(url), 'lxml')
+
+        try:
+            pattern = 'Next'
+            url = base_url + soup.find('ul', class_='pagination').find('a', text=re.compile(pattern)).get('href')
+        except:
+            break
 
 
 if __name__ == '__main__':
