@@ -27,10 +27,26 @@ def get_page_data(html, page):
 
     for tr in trs:
         tds = tr.find_all('td')
-        name = tds[1].find('a', class_='currency-name-container').text
-        symbol = tds[1].find('a').text
-        url = page[:-1] + tds[1].find('a').get('href')
-        price = tds[3].find('a').get('data-usd')
+
+        try:
+            name = tds[1].find('a', class_='currency-name-container').text.strip()
+        except:
+            name = ''
+
+        try:
+            symbol = tds[1].find('a').text.strip()
+        except:
+            symbol = ''
+
+        try:
+            url = page[:-1] + tds[1].find('a').get('href')
+        except:
+            url = ''
+
+        try:
+            price = tds[3].find('a').get('data-usd')
+        except:
+            price = ''
 
         data = {
             'name': name,
