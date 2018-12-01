@@ -8,7 +8,9 @@ from bs4 import BeautifulSoup
 def get_html(url):
     """Returns the HTML code of the page."""
     response = requests.get(url)
-    return response.text
+    if response.ok:
+        return response.text
+    print('Error', response.status_code)
 
 
 def write_csv(data):
