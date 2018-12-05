@@ -74,6 +74,7 @@ def get_page_data(html, page):
 
 
 def save_in_db():
+    """Saves data in database"""
     db.connect()
     db.create_tables([Coin])
 
