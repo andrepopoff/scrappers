@@ -4,6 +4,20 @@ import csv
 import re
 
 from bs4 import BeautifulSoup
+from peewee import PostgresqlDatabase, CharField, TextField, Model
+
+
+db = PostgresqlDatabase(database='coins', user='postgres', password='Lub08mpostgresql', host='localhost')
+
+
+class Coin(Model):
+    name = CharField()
+    index = CharField()
+    link = TextField()
+    price = CharField()
+
+    class Meta:
+        database = db
 
 
 def get_html(url):
@@ -57,6 +71,11 @@ def get_page_data(html, page):
         }
 
         write_csv(data)
+
+
+def save_in_db():
+    db.connect()
+    pass
 
 
 def main():
