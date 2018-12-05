@@ -87,6 +87,8 @@ def save_in_db():
             for i in range(0, len(coins), 100):
                 Coin.insert_many(coins[i:i+100]).execute()
 
+    db.close()
+
 
 def main():
     base_url = 'https://coinmarketcap.com/'
