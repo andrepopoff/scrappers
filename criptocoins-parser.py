@@ -12,8 +12,8 @@ db = PostgresqlDatabase(database='coins', user='postgres', password='Lub08mpostg
 
 class Coin(Model):
     name = CharField()
-    index = CharField()
-    link = TextField()
+    symbol = CharField()
+    url = TextField()
     price = CharField()
 
     class Meta:
@@ -75,7 +75,16 @@ def get_page_data(html, page):
 
 def save_in_db():
     db.connect()
-    pass
+    db.create_tables([Coin])
+
+    with open('cmc.csv') as file:
+        fieldnames_by_order = ['name', 'symbol', 'url', 'price']
+        reader = csv.DictReader(file, fieldnames=fieldnames_by_order)
+        coins = list(reader)
+
+        with db.atomic():
+            for i in range(0, len(coins), 100):
+                Coin.insert_many(coins[i:i+100]).execute()
 
 
 def main():
@@ -91,6 +100,8 @@ def main():
             url = base_url + soup.find('ul', class_='pagination').find('a', text=re.compile(pattern)).get('href')
         except:
             break
+
+    save_in_db()
 
 
 if __name__ == '__main__':
