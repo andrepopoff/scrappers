@@ -4,6 +4,20 @@ import csv
 import re
 
 from bs4 import BeautifulSoup
+from peewee import PostgresqlDatabase, CharField, TextField, Model
+
+
+db = PostgresqlDatabase(database='coins', user='postgres', password='Lub08mpostgresql', host='localhost')
+
+
+class Coin(Model):
+    name = CharField()
+    symbol = CharField()
+    url = TextField()
+    price = CharField()
+
+    class Meta:
+        database = db
 
 
 def get_html(url):
@@ -14,14 +28,14 @@ def get_html(url):
     print('Error', response.status_code)
 
 
-def write_csv(data):
+def write_csv(to_file, data, fieldnames):
     """Writes data in csv file."""
-    with open('cmc.csv', 'a') as f:
+    with open(to_file, 'a') as f:
         writer = csv.writer(f)
-        writer.writerow((data['name'], data['symbol'], data['url'], data['price']))
+        writer.writerow((data[name] for name in fieldnames))
 
 
-def get_page_data(html, page):
+def get_page_data(html, page, to_file, fieldnames):
     """Gets data from https://coinmarketcap.com/"""
     soup = BeautifulSoup(html, 'lxml')
     trs = soup.find('table', id='currencies').find('tbody').find_all('tr')
@@ -49,22 +63,33 @@ def get_page_data(html, page):
         except:
             price = ''
 
-        data = {
-            'name': name,
-            'symbol': symbol,
-            'url': url,
-            'price': price
-        }
+        data = dict(zip(fieldnames, (name, symbol, url, price)))
 
-        write_csv(data)
+        write_csv(to_file, data, fieldnames)
+
+
+def save_in_db(from_file, fieldnames):
+    """Saves data in database"""
+    db.connect()
+    db.create_tables([Coin])
+
+    with open(from_file) as file:
+        reader = csv.DictReader(file, fieldnames=fieldnames)
+        coins = list(reader)
+
+        with db.atomic():
+            for i in range(0, len(coins), 100):
+                Coin.insert_many(coins[i:i+100]).execute()
 
 
 def main():
     base_url = 'https://coinmarketcap.com/'
+    filename = 'cmc.csv'
+    fieldnames = 'name', 'symbol', 'url', 'price'
     url = base_url
 
     while True:
-        get_page_data(get_html(url), url)
+        get_page_data(get_html(url), url, filename, fieldnames)
         soup = BeautifulSoup(get_html(url), 'lxml')
 
         try:
@@ -72,6 +97,8 @@ def main():
             url = base_url + soup.find('ul', class_='pagination').find('a', text=re.compile(pattern)).get('href')
         except:
             break
+
+    save_in_db(filename, fieldnames)
 
 
 if __name__ == '__main__':
