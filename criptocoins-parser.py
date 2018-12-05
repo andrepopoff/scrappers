@@ -28,14 +28,14 @@ def get_html(url):
     print('Error', response.status_code)
 
 
-def write_csv(data):
+def write_csv(to_file, data):
     """Writes data in csv file."""
-    with open('cmc.csv', 'a') as f:
+    with open(to_file, 'a') as f:
         writer = csv.writer(f)
         writer.writerow((data['name'], data['symbol'], data['url'], data['price']))
 
 
-def get_page_data(html, page):
+def get_page_data(html, page, to_file):
     """Gets data from https://coinmarketcap.com/"""
     soup = BeautifulSoup(html, 'lxml')
     trs = soup.find('table', id='currencies').find('tbody').find_all('tr')
@@ -70,15 +70,15 @@ def get_page_data(html, page):
             'price': price
         }
 
-        write_csv(data)
+        write_csv(to_file, data)
 
 
-def save_in_db():
+def save_in_db(from_file):
     """Saves data in database"""
     db.connect()
     db.create_tables([Coin])
 
-    with open('cmc.csv') as file:
+    with open(from_file) as file:
         fieldnames_by_order = ['name', 'symbol', 'url', 'price']
         reader = csv.DictReader(file, fieldnames=fieldnames_by_order)
         coins = list(reader)
@@ -92,10 +92,11 @@ def save_in_db():
 
 def main():
     base_url = 'https://coinmarketcap.com/'
+    filename = 'cmc.csv'
     url = base_url
 
     while True:
-        get_page_data(get_html(url), url)
+        get_page_data(get_html(url), url, filename)
         soup = BeautifulSoup(get_html(url), 'lxml')
 
         try:
@@ -104,7 +105,7 @@ def main():
         except:
             break
 
-    save_in_db()
+    save_in_db(filename)
 
 
 if __name__ == '__main__':
