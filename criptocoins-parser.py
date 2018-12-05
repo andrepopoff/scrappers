@@ -28,14 +28,14 @@ def get_html(url):
     print('Error', response.status_code)
 
 
-def write_csv(to_file, data):
+def write_csv(to_file, data, fieldnames):
     """Writes data in csv file."""
     with open(to_file, 'a') as f:
         writer = csv.writer(f)
-        writer.writerow((data['name'], data['symbol'], data['url'], data['price']))
+        writer.writerow((data[name] for name in fieldnames))
 
 
-def get_page_data(html, page, to_file):
+def get_page_data(html, page, to_file, fieldnames):
     """Gets data from https://coinmarketcap.com/"""
     soup = BeautifulSoup(html, 'lxml')
     trs = soup.find('table', id='currencies').find('tbody').find_all('tr')
@@ -63,40 +63,33 @@ def get_page_data(html, page, to_file):
         except:
             price = ''
 
-        data = {
-            'name': name,
-            'symbol': symbol,
-            'url': url,
-            'price': price
-        }
+        data = dict(zip(fieldnames, (name, symbol, url, price)))
 
-        write_csv(to_file, data)
+        write_csv(to_file, data, fieldnames)
 
 
-def save_in_db(from_file):
+def save_in_db(from_file, fieldnames):
     """Saves data in database"""
     db.connect()
     db.create_tables([Coin])
 
     with open(from_file) as file:
-        fieldnames_by_order = ['name', 'symbol', 'url', 'price']
-        reader = csv.DictReader(file, fieldnames=fieldnames_by_order)
+        reader = csv.DictReader(file, fieldnames=fieldnames)
         coins = list(reader)
 
         with db.atomic():
             for i in range(0, len(coins), 100):
                 Coin.insert_many(coins[i:i+100]).execute()
 
-    db.close()
-
 
 def main():
     base_url = 'https://coinmarketcap.com/'
     filename = 'cmc.csv'
+    fieldnames = 'name', 'symbol', 'url', 'price'
     url = base_url
 
     while True:
-        get_page_data(get_html(url), url, filename)
+        get_page_data(get_html(url), url, filename, fieldnames)
         soup = BeautifulSoup(get_html(url), 'lxml')
 
         try:
@@ -105,7 +98,7 @@ def main():
         except:
             break
 
-    save_in_db(filename)
+    save_in_db(filename, fieldnames)
 
 
 if __name__ == '__main__':
