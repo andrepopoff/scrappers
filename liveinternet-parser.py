@@ -15,27 +15,28 @@ def write_csv(data):
 
 
 def main():
-    url = 'https://www.liveinternet.ru/rating/ru//today.tsv?page=2'
-    response = get_html(url)
-    data = response.strip().split('\n')[1:]
+    for i in range(1, 7945):
+        url = 'https://www.liveinternet.ru/rating/ru//today.tsv?page={}'.format(i)
+        response = get_html(url)
+        data = response.strip().split('\n')[1:]
 
-    for row in data:
-        columns = row.strip().split('\t')
-        name = columns[0]
-        url = columns[1]
-        description = columns[2]
-        traffic = columns[3]
-        percent = columns[4]
+        for row in data:
+            columns = row.strip().split('\t')
+            name = columns[0]
+            url = columns[1]
+            description = columns[2]
+            traffic = columns[3]
+            percent = columns[4]
 
-        data = {
-            'name': name,
-            'url': url,
-            'description': description,
-            'traffic': traffic,
-            'percent': percent
-        }
+            data = {
+                'name': name,
+                'url': url,
+                'description': description,
+                'traffic': traffic,
+                'percent': percent
+            }
 
-        write_csv(data)
+            write_csv(data)
 
 
 if __name__ == '__main__':
