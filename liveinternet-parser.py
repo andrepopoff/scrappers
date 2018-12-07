@@ -30,12 +30,19 @@ def make_all(url):
     get_page_data(text)
 
 
-def main():
-    url = 'https://www.liveinternet.ru/rating/ru//today.tsv?page={}'
-    urls = [url.format(i) for i in range(1, 5000)]
+def main(multi_processing=False):
+    """Attention: using multiprocessing,
+    you should remember that not all servers allow you to parse data by several processes.
+    Sometimes it does not save time!
+    """
+    base_url = 'https://www.liveinternet.ru/rating/ru//today.tsv?page={}'
+    urls = [base_url.format(i) for i in range(1, 5000)]
 
-    with Pool(20) as p:
-        p.map(make_all, urls)
+    if multi_processing:
+        with Pool(20) as p:
+            p.map(make_all, urls)
+    else:
+        [make_all(url) for url in urls]
 
 
 if __name__ == '__main__':
