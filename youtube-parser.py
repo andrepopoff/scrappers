@@ -1,11 +1,19 @@
 import requests
 import sys
+import csv
+
 from bs4 import BeautifulSoup
 
 
 def get_html(url):
     response = requests.get(url)
     return response
+
+
+def write_csv(data):
+    with open('videos.csv', 'a') as f:
+        writer = csv.DictWriter(f, fieldnames=['name', 'url'])
+        writer.writerow(data)
 
 
 def get_page_data(response):
